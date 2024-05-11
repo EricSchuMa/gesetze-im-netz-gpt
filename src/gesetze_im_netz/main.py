@@ -1,8 +1,10 @@
+import os
 import re
 
 import uvicorn
 from datasets import load_dataset
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 
@@ -75,6 +77,12 @@ def read_section_or_article(dataset_name: str, section_or_article: str):
 
     text = get_paragraph(df, section_or_article)
     return {"section_or_article": section_or_article, "text": text}
+
+
+@app.get("/privacy", response_class=HTMLResponse)
+def privacy_policy():
+    with open(os.path.join(os.path.dirname(__file__), "privacy-policy.html"), "r") as f:
+        return f.read()
 
 
 # Run the application if executed directly
