@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "gesetze_im_netz"
+version = "0.1.0"
+description = ""
+authors = ["Max Schumacher <max.schumacher12@googlemail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.111.0"
+uvicorn = "^0.29.0"
+datasets = "^2.19.1"
+pandas = "^2.2.2"
+pre-commit = "^3.7.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
