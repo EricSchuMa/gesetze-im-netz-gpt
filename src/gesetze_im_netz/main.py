@@ -44,6 +44,7 @@ def load_and_prepare_data(dataset_name):
 bgb = load_and_prepare_data("wndknd/german-law-bgb")
 stgb = load_and_prepare_data("wndknd/german-law-stgb")
 gg = load_and_prepare_data("wndknd/german-law-gg")  # Grundgesetz
+sgb_1 = load_and_prepare_data("wndknd/german-law-sgb1")  # Sozialgesetzbuch I
 
 
 # Define a function to get paragraph by section number or article
@@ -64,6 +65,8 @@ def read_section_or_article(dataset_name: str, section_or_article: str):
         df = stgb
     elif dataset_name == "gg":
         df = gg
+    elif dataset_name == "sgb1":
+        df = sgb_1
     else:
         return {
             "section_or_article": section_or_article,
