@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.10-slim
+FROM --platform=linux/amd64 python:3.10-slim
 
 # Set the working directory in the container
 WORKDIR /app
@@ -12,8 +12,8 @@ RUN pip install poetry
 RUN poetry config virtualenvs.create false
 RUN poetry install --no-dev
 
-# Make port 8000 available to the world outside this container
-EXPOSE 8000
+# Make port available to the world outside this container
+EXPOSE $PORT
 
 # Run the application when the container launches
-CMD ["uvicorn", "gesetze_im_netz.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD uvicorn gesetze_im_netz.main:app --host 0.0.0.0 --port $PORT

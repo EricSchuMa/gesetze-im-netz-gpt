@@ -21,6 +21,10 @@
     docker build -t gesetze-im-netz-gpt .
     ```
 
+   Environment variables:
+    - `$PORT` The port the API will be exposed on.
+
+
 3. **Run the Docker container:**
 
     ```bash

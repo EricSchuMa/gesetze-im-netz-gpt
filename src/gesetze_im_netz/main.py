@@ -7,44 +7,73 @@ from fastapi import FastAPI
 app = FastAPI()
 
 
-# Utility functions (already defined)
-def extract_section_number(text):
-    # This regular expression targets section numbers that appear at the start of the text.
-    # We use '^' to match the beginning of the text.
-    range_match = re.search(r"^§§\s*(\d+)\s*bis\s*(\d+)", text)
-    if range_match:
-        start, end = int(range_match.group(1)), int(range_match.group(2))
-        return list(range(start, end + 1))
+# Define a utility function to extract section or article numbers
+def extract_section_or_article(text):
+    # Match articles in Grundgesetz
+    art_match = re.search(r"^Art\s+(\d+)(\s+[a-z])?", text)
+    if art_match:
+        return [
+            f"{art_match.group(1)}{art_match.group(2).strip() if art_match.group(2) else ''}"
+        ]
 
-    # Similarly, this searches for a single section number at the start of the text.
-    single_match = re.search(r"^§\s*(\d+)", text)
+    # Handle range of sections with optional suffix letters (for BGB/STGB)
+    range_match = re.search(r"^§§\s*(\d+)([a-z]?)\s*bis\s*(\d+)([a-z]?)", text)
+    if range_match:
+        start, start_suffix, end, end_suffix = range_match.groups()
+        return [
+            f"{num}{start_suffix if num == int(start) else end_suffix}"
+            for num in range(int(start), int(end) + 1)
+        ]
+
+    # Handle single section with optional suffix letter
+    single_match = re.search(r"^§\s*(\d+)([a-z]?)", text)
     if single_match:
-        return [int(single_match.group(1))]
+        return [f"{single_match.group(1)}{single_match.group(2)}"]
 
     return None
 
 
-dataset = load_dataset("wndknd/german-law-bgb")
-df = dataset["train"].to_pandas()  # convert to pandas DataFrame
-df["section"] = df["text"].apply(extract_section_number)
+# Load datasets and preprocess
+def load_and_prepare_data(dataset_name):
+    dataset = load_dataset(dataset_name)
+    df = dataset["train"].to_pandas()
+    df["section"] = df["text"].apply(extract_section_or_article)
+    return df
 
 
+bgb = load_and_prepare_data("wndknd/german-law-bgb")
+stgb = load_and_prepare_data("wndknd/german-law-stgb")
+gg = load_and_prepare_data("wndknd/german-law-gg")  # Grundgesetz
+
+
+# Define a function to get paragraph by section number or article
 def get_paragraph(df, query):
-    query = query.strip().replace(" ", "")
-    query_number = int(re.search(r"§(\d+)", query).group(1))
+    query = query.strip().replace(" ", "").replace("§", "").replace("Art", "")
     for index, row in df.iterrows():
-        if row["section"] is not None and query_number in row["section"]:
+        if row["section"] is not None and query in row["section"]:
             return row["text"]
-    return "Section not found."
+    return "Section or article not found."
 
 
-# Endpoint to get paragraph by section number
-@app.get("/bgb/{section}")
-def read_section(section: str):
-    section_text = get_paragraph(df, section)
-    return {"section": section, "text": section_text}
+# Unified endpoint to get paragraph by section number or article
+@app.get("/{dataset_name}/{section_or_article}")
+def read_section_or_article(dataset_name: str, section_or_article: str):
+    if dataset_name == "bgb":
+        df = bgb
+    elif dataset_name == "stgb":
+        df = stgb
+    elif dataset_name == "gg":
+        df = gg
+    else:
+        return {
+            "section_or_article": section_or_article,
+            "text": "Invalid dataset name",
+        }
+
+    text = get_paragraph(df, section_or_article)
+    return {"section_or_article": section_or_article, "text": text}
 
 
-# Include this if you want to run using python script instead of command line
+# Run the application if executed directly
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
