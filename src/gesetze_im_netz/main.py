@@ -79,6 +79,39 @@ def read_section_or_article(dataset_name: str, section_or_article: str):
     return {"section_or_article": section_or_article, "text": text}
 
 
+# Add an endpoint that works with this POST request
+# {
+#   data: {
+#     dataset_name: _value_,
+#     section_or_article: _value_
+#   }
+# }
+@app.post("/section_or_article")
+def read_section_or_article_post(payload: dict):
+    data = payload.get("data")
+    dataset_name = data.get("dataset_name")["value"]
+    section_or_article = data.get("section_or_article")["value"]
+    if dataset_name is None or section_or_article is None:
+        return {"error": "Please provide both 'dataset_name' and 'section_or_article'."}
+
+    if dataset_name == "bgb":
+        df = bgb
+    elif dataset_name == "stgb":
+        df = stgb
+    elif dataset_name == "gg":
+        df = gg
+    elif dataset_name == "sgb1":
+        df = sgb_1
+    else:
+        return {
+            "section_or_article": section_or_article,
+            "text": f"Invalid dataset name",
+        }
+
+    text = get_paragraph(df, section_or_article)
+    return text
+
+
 @app.get("/privacy", response_class=HTMLResponse)
 def privacy_policy():
     with open(os.path.join(os.path.dirname(__file__), "privacy-policy.html"), "r") as f:
