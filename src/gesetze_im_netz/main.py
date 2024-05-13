@@ -79,13 +79,6 @@ def read_section_or_article(dataset_name: str, section_or_article: str):
     return {"section_or_article": section_or_article, "text": text}
 
 
-# Add an endpoint that works with this POST request
-# {
-#   data: {
-#     dataset_name: _value_,
-#     section_or_article: _value_
-#   }
-# }
 @app.post("/section_or_article")
 def read_section_or_article_post(payload: dict):
     data = payload.get("data")
